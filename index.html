@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>SnapNutri AI</title>
+  
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#10b981">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    .pb-safe { padding-bottom: max(1rem, env(safe-area-inset-bottom)); }
+    .pt-safe { padding-top: max(1rem, env(safe-area-inset-top)); }
+    body { -webkit-tap-highlight-color: transparent; }
+  </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 antialiased pb-24">
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-30 bg-emerald-600 text-white pt-safe shadow-md">
+    <div class="px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-full bg-white text-emerald-600 flex items-center justify-center font-bold">
+          <i class="fa-solid fa-camera"></i>
+        </div>
+        <h1 class="text-xl font-black tracking-wide">SnapNutri AI</h1>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENUTO PRINCIPALE -->
+  <main class="max-w-md mx-auto px-4 pt-4">
+
+    <!-- TAB DIARIO -->
+    <div id="tab-diary" class="tab-content space-y-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-3">
+        <div class="flex justify-between items-center text-sm text-gray-500 font-medium">
+          <span>Riepilogo Giornaliero</span>
+          <span id="current-date-label">Oggi</span>
+        </div>
+        
+        <div class="grid grid-cols-3 gap-2 text-center my-2">
+          <div class="p-2 rounded-xl bg-emerald-50">
+            <p class="text-xs text-emerald-600 font-semibold uppercase">Calorie</p>
+            <p id="total-kcal" class="text-lg font-black text-emerald-700">0</p>
+            <p class="text-[10px] text-emerald-500">/ <span id="target-kcal-label">2000</span> kcal</p>
+          </div>
+          <div class="p-2 rounded-xl bg-blue-50">
+            <p class="text-xs text-blue-600 font-semibold uppercase">Proteine</p>
+            <p id="total-protein" class="text-lg font-black text-blue-700">0g</p>
+            <p class="text-[10px] text-blue-500">/ <span id="target-protein-label">120</span>g</p>
+          </div>
+          <div class="p-2 rounded-xl bg-amber-50">
+            <p class="text-xs text-amber-600 font-semibold uppercase">Carbo</p>
+            <p id="total-carbs" class="text-lg font-black text-amber-700">0g</p>
+            <p class="text-[10px] text-amber-500">/ <span id="target-carbs-label">250</span>g</p>
+          </div>
+        </div>
+
+        <div>
+          <div class="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
+            <div id="kcal-progress-bar" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Colazione -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-mug-saucer text-amber-500"></i> Colazione</h3>
+            <span id="kcal-colazione" class="text-sm font-semibold text-gray-500">0 kcal</span>
+          </div>
+          <div id="list-colazione" class="space-y-1 text-sm text-gray-600 divide-y divide-gray-50"></div>
+        </div>
+        <!-- Pranzo -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-utensils text-emerald-500"></i> Pranzo</h3>
+            <span id="kcal-pranzo" class="text-sm font-semibold text-gray-500">0 kcal</span>
+          </div>
+          <div id="list-pranzo" class="space-y-1 text-sm text-gray-600 divide-y divide-gray-50"></div>
+        </div>
+        <!-- Cena -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-moon text-indigo-500"></i> Cena</h3>
+            <span id="kcal-cena" class="text-sm font-semibold text-gray-500">0 kcal</span>
+          </div>
+          <div id="list-cena" class="space-y-1 text-sm text-gray-600 divide-y divide-gray-50"></div>
+        </div>
+        <!-- Spuntini -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="font-bold text-gray-700 flex items-center gap-2"><i class="fa-solid fa-apple-whole text-rose-500"></i> Spuntini</h3>
+            <span id="kcal-spuntini" class="text-sm font-semibold text-gray-500">0 kcal</span>
+          </div>
+          <div id="list-spuntini" class="space-y-1 text-sm text-gray-600 divide-y divide-gray-50"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB SCANSIONE -->
+    <div id="tab-scan" class="tab-content hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 text-center space-y-4">
+        <h2 class="text-lg font-bold text-gray-800">Scansiona il tuo Piatto</h2>
+        <p class="text-xs text-gray-500">Scatta una foto o sceglila dalla galleria per analizzarla con l'AI.</p>
+
+        <input type="file" id="photo-input" accept="image/*" class="hidden" onchange="handleImageSelect(event)">
+
+        <div class="grid grid-cols-2 gap-3">
+          <button onclick="triggerFileInput(true)" class="bg-emerald-600 text-white font-semibold py-3 px-4 rounded-xl shadow-md hover:bg-emerald-700 transition flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-camera text-base"></i> Scatta Foto
+          </button>
+          <button onclick="triggerFileInput(false)" class="bg-gray-100 text-gray-700 font-semibold py-3 px-4 rounded-xl border border-gray-200 hover:bg-gray-200 transition flex items-center justify-center gap-2 text-sm">
+            <i class="fa-solid fa-image text-base"></i> Galleria
+          </button>
+        </div>
+
+        <div id="photo-preview-container" class="hidden relative rounded-xl overflow-hidden bg-black max-h-64 flex items-center justify-center">
+          <img id="photo-preview" src="" class="max-h-64 object-contain">
+        </div>
+
+        <div id="scan-actions" class="hidden space-y-3">
+          <div class="flex items-center gap-2 text-left">
+            <label class="text-xs font-semibold text-gray-600">Assegna a:</label>
+            <select id="meal-type-select" class="bg-gray-50 border border-gray-200 text-sm rounded-lg p-2 font-medium text-gray-700 flex-1">
+              <option value="Colazione">Colazione</option>
+              <option value="Pranzo" selected>Pranzo</option>
+              <option value="Cena">Cena</option>
+              <option value="Spuntini">Spuntino</option>
+            </select>
+          </div>
+
+          <button id="btn-analyze" onclick="analyzePhoto()" class="w-full bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg hover:bg-emerald-700 transition flex items-center justify-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Analizza Foto con AI
+          </button>
+        </div>
+
+        <div id="loading-spinner" class="hidden py-8 space-y-3">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-emerald-500 border-t-transparent"></div>
+          <p class="text-xs font-semibold text-emerald-600">Analisi in corso con Gemini AI...</p>
+        </div>
+      </div>
+
+      <div id="analysis-result" class="hidden bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4">
+        <div class="flex justify-between items-center border-b pb-2">
+          <h3 class="font-bold text-gray-800">Risultato Analisi AI</h3>
+          <span id="ai-confidence" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">Alta Precisione</span>
+        </div>
+
+        <p id="ai-advice" class="text-xs text-gray-600 italic bg-gray-50 p-2.5 rounded-lg border border-gray-100"></p>
+
+        <div class="w-full max-w-[200px] mx-auto">
+          <canvas id="macroChart"></canvas>
+        </div>
+
+        <div>
+          <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Ingredienti Rilevati</h4>
+          <div id="items-list" class="space-y-2"></div>
+        </div>
+
+        <button onclick="saveMealToDiary()" class="w-full bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl shadow hover:bg-emerald-700 transition">
+          <i class="fa-solid fa-plus-circle mr-1"></i> Aggiungi al Diario
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB OBIETTIVI -->
+    <div id="tab-calculator" class="tab-content hidden space-y-4">
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 space-y-4">
+        <h2 class="text-lg font-bold text-gray-800">Calcolo Fabbisogno Calorico</h2>
+        <form id="bmr-form" onsubmit="calculateBMR(event)" class="space-y-3 text-sm">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Genere</label>
+              <select id="user-gender" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5">
+                <option value="male">Uomo</option>
+                <option value="female">Donna</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Età</label>
+              <input type="number" id="user-age" required value="30" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Altezza (cm)</label>
+              <input type="number" id="user-height" required value="175" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-gray-600 mb-1">Peso (kg)</label>
+              <input type="number" id="user-weight" required value="70" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Livello Attività</label>
+            <select id="user-activity" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-2.5">
+              <option value="1.2">Sedentario</option>
+              <option value="1.375" selected>Leggermente attivo</option>
+              <option value="1.55">Moderatamente attivo</option>
+              <option value="1.725">Molto attivo</option>
+            </select>
+          </div>
+
+          <button type="submit" class="w-full bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl shadow hover:bg-emerald-700 transition">
+            Calcola e Salva
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- NAVBAR MOBILE -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 pb-safe">
+    <div class="max-w-md mx-auto grid grid-cols-3 text-center py-2">
+      <button onclick="switchTab('diary')" id="nav-diary" class="nav-btn text-emerald-600 flex flex-col items-center gap-1">
+        <i class="fa-solid fa-book-open text-lg"></i>
+        <span class="text-[10px] font-semibold">Diario</span>
+      </button>
+      <button onclick="switchTab('scan')" id="nav-scan" class="nav-btn text-gray-400 flex flex-col items-center gap-1">
+        <i class="fa-solid fa-camera text-lg"></i>
+        <span class="text-[10px] font-semibold">Scansiona</span>
+      </button>
+      <button onclick="switchTab('calculator')" id="nav-calculator" class="nav-btn text-gray-400 flex flex-col items-center gap-1">
+        <i class="fa-solid fa-calculator text-lg"></i>
+        <span class="text-[10px] font-semibold">Obiettivi</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- LOGICA JAVASCRIPT -->
+  <script>
+    let resizedImageBase64 = null;
+    let currentAnalysisResult = null;
+    let chartInstance = null;
+
+    let userTargets = JSON.parse(localStorage.getItem('userTargets')) || { kcal: 2000, protein: 120, carbs: 250, fat: 65 };
+    let diaryData = JSON.parse(localStorage.getItem('diaryData')) || { Colazione: [], Pranzo: [], Cena: [], Spuntini: [] };
+
+    window.onload = function() {
+      updateTargetsUI();
+      renderDiary();
+    };
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-btn').forEach(el => el.classList.replace('text-emerald-600', 'text-gray-400'));
+      document.getElementById('tab-' + tabName).classList.remove('hidden');
+      document.getElementById('nav-' + tabName).classList.replace('text-gray-400', 'text-emerald-600');
+    }
+
+    function triggerFileInput(isCamera) {
+      const input = document.getElementById('photo-input');
+      if (isCamera) {
+        input.setAttribute('capture', 'environment');
+      } else {
+        input.removeAttribute('capture');
+      }
+      input.click();
+    }
+
+    function handleImageSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1024;
+
+          if (width > height && width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          resizedImageBase64 = canvas.toDataURL('image/jpeg', 0.85);
+          
+          document.getElementById('photo-preview').src = resizedImageBase64;
+          document.getElementById('photo-preview-container').classList.remove('hidden');
+          document.getElementById('scan-actions').classList.remove('hidden');
+          document.getElementById('analysis-result').classList.add('hidden');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // ANALISI TRAMITE API VERCEL
+    async function analyzePhoto() {
+      document.getElementById('loading-spinner').classList.remove('hidden');
+      document.getElementById('scan-actions').classList.add('hidden');
+
+      const base64Data = resizedImageBase64.split(',')[1];
+
+      try {
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64: base64Data })
+        });
+
+        if (!res.ok) throw new Error('Errore nella risposta del server backend');
+
+        const resultData = await res.json();
+        currentAnalysisResult = resultData;
+        displayAnalysisResult(currentAnalysisResult);
+
+      } catch (err) {
+        console.error(err);
+        alert('Impossibile analizzare la foto. Verificare la connessione e riprovare.');
+        document.getElementById('scan-actions').classList.remove('hidden');
+      } finally {
+        document.getElementById('loading-spinner').classList.add('hidden');
+      }
+    }
+
+    function displayAnalysisResult(result) {
+      document.getElementById('analysis-result').classList.remove('hidden');
+      document.getElementById('ai-advice').textContent = result.advice || '';
+      document.getElementById('ai-confidence').textContent = (result.confidence || 'Media') + ' Precisione';
+
+      const container = document.getElementById('items-list');
+      container.innerHTML = '';
+
+      let p = 0, c = 0, f = 0;
+      result.items.forEach(item => {
+        p += item.protein || 0;
+        c += item.carbs || 0;
+        f += item.fat || 0;
+
+        const row = document.createElement('div');
+        row.className = 'flex justify-between bg-gray-50 p-2.5 rounded-lg text-xs';
+        row.innerHTML = `
+          <div>
+            <span class="font-bold text-gray-800">${item.name}</span>
+            <span class="text-gray-400 block">${item.grams}g</span>
+          </div>
+          <div class="text-right">
+            <span class="font-bold text-emerald-600 block">${item.kcal} kcal</span>
+            <span class="text-[10px] text-gray-400">P:${item.protein}g C:${item.carbs}g F:${item.fat}g</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      renderChart(p, c, f);
+    }
+
+    function renderChart(p, c, f) {
+      const ctx = document.getElementById('macroChart').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Prot (g)', 'Carb (g)', 'Gras (g)'],
+          datasets: [{ data: [p, c, f], backgroundColor: ['#3b82f6', '#f59e0b', '#ef4444'] }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    function saveMealToDiary() {
+      if (!currentAnalysisResult) return;
+      const type = document.getElementById('meal-type-select').value;
+      currentAnalysisResult.items.forEach(item => diaryData[type].push(item));
+      localStorage.setItem('diaryData', JSON.stringify(diaryData));
+      renderDiary();
+      switchTab('diary');
+      alert('Aggiunto al diario!');
+    }
+
+    function renderDiary() {
+      let grandTotalKcal = 0, grandTotalP = 0, grandTotalC = 0;
+
+      ['Colazione', 'Pranzo', 'Cena', 'Spuntini'].forEach(type => {
+        const container = document.getElementById('list-' + type.toLowerCase());
+        const kcalLabel = document.getElementById('kcal-' + type.toLowerCase());
+        const items = diaryData[type] || [];
+        let typeKcal = 0;
+
+        container.innerHTML = items.length === 0 ? '<p class="text-xs text-gray-400 italic py-1">Nessun alimento</p>' : '';
+
+        items.forEach((item, idx) => {
+          typeKcal += item.kcal || 0;
+          grandTotalP += item.protein || 0;
+          grandTotalC += item.carbs || 0;
+
+          const div = document.createElement('div');
+          div.className = 'flex justify-between items-center py-1';
+          div.innerHTML = `
+            <span>${item.name} <small class="text-gray-400">(${item.grams}g)</small></span>
+            <div class="flex items-center gap-2">
+              <span class="font-medium text-emerald-600">${item.kcal} kcal</span>
+              <button onclick="removeItem('${type}', ${idx})" class="text-red-400 text-xs"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          `;
+          container.appendChild(div);
+        });
+
+        kcalLabel.textContent = typeKcal + ' kcal';
+        grandTotalKcal += typeKcal;
+      });
+
+      document.getElementById('total-kcal').textContent = grandTotalKcal;
+      document.getElementById('total-protein').textContent = grandTotalP + 'g';
+      document.getElementById('total-carbs').textContent = grandTotalC + 'g';
+      const pct = Math.min(100, Math.round((grandTotalKcal / userTargets.kcal) * 100));
+      document.getElementById('kcal-progress-bar').style.width = pct + '%';
+    }
+
+    function removeItem(type, index) {
+      diaryData[type].splice(index, 1);
+      localStorage.setItem('diaryData', JSON.stringify(diaryData));
+      renderDiary();
+    }
+
+    function calculateBMR(e) {
+      e.preventDefault();
+      const gender = document.getElementById('user-gender').value;
+      const age = parseFloat(document.getElementById('user-age').value);
+      const height = parseFloat(document.getElementById('user-height').value);
+      const weight = parseFloat(document.getElementById('user-weight').value);
+      const activity = parseFloat(document.getElementById('user-activity').value);
+
+      let bmr = (10 * weight) + (6.25 * height) - (5 * age) + (gender === 'male' ? 5 : -161);
+      const tdee = Math.round(bmr * activity);
+
+      userTargets = {
+        kcal: tdee,
+        protein: Math.round((tdee * 0.25) / 4),
+        carbs: Math.round((tdee * 0.50) / 4),
+        fat: Math.round((tdee * 0.25) / 9)
+      };
+
+      localStorage.setItem('userTargets', JSON.stringify(userTargets));
+      updateTargetsUI();
+      renderDiary();
+      switchTab('diary');
+      alert(`Nuovo obiettivo impostato: ${tdee} kcal!`);
+    }
+
+    function updateTargetsUI() {
+      document.getElementById('target-kcal-label').textContent = userTargets.kcal;
+      document.getElementById('target-protein-label').textContent = userTargets.protein;
+      document.getElementById('target-carbs-label').textContent = userTargets.carbs;
+    }
+  </script>
+</body>
+</html>
